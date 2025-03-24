@@ -1,22 +1,36 @@
 pipeline {
     agent any
+
+    environment {
+        IMAGE_NAME = 'vedant273ed/django-docker'
+        CONTAINER_NAME = 'studentproject'
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/your-repo-url.git'
+                git branch: 'main', url: 'https://github.com/SRCEM-AIML/C4_52_Vedant-Chatur_Assignment2.git'
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t your-dockerhub-username/studentproject .'
+                bat "docker build -t %IMAGE_NAME% ."
             }
         }
+
         stage('Push to Docker Hub') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh 'docker push your-dockerhub-username/studentproject'
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'v1', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        bat """
+                        echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                        docker push %IMAGE_NAME%
+                        """
+                    }
                 }
             }
         }
+
     }
 }
